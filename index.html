@@ -1,0 +1,64 @@
+<html>
+<head>
+<style>
+body{
+  background-color: #FFF;
+  color: #000;
+}
+.content {
+  position: relative;
+  width: 100%; 
+  margin: auto;
+  text-align: center;
+  padding-top: 40px;
+}
+a, a.active, a.visited, a.hover{
+  color: #000;
+  text-decoration: none;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="lib/three.min.js"></script>
+<script type="x-shader/x-vertex" id="vertexShader">
+//varying vec3 vNormal;
+varying vec3 vPosition;
+
+void main(){
+  //vNormal = normal;
+  vPosition = position;
+
+  gl_Position = projectionMatrix *
+    modelViewMatrix *
+    vec4(position,1.0);
+}
+</script>
+<script type="x-shader/x-fragment" id="fragmentShader">
+//varying vec3 vNormal;
+varying vec3 vPosition;
+uniform float width;
+uniform float height;
+
+float rand(vec2 co){
+  return fract(sin(dot(co.xy,vec2(12.9898,78.233)))* 43758.5453);
+}
+
+void main(){
+  //float h = rand(vNormal.xy);
+  gl_FragColor = vec4(
+    gl_FragCoord.x/800.0,
+    gl_FragCoord.y/800.0,
+    gl_FragCoord.z/800.0,
+    1.0);
+}
+</script>
+
+
+
+</head>
+<body>
+<div class="content">
+  <div id="box"></div>
+  <script src="src/meander.js"></script>
+</div>
+</body>
+</html>
