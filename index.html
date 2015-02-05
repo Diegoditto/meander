@@ -21,69 +21,41 @@ a, a.active, a.visited, a.hover{
 <script src="lib/three.min.js"></script>
 <script type="x-shader/x-vertex" id="vertexShader">
 
-attribute vec3 tangent;
-varying vec3 vNormal;
-varying vec3 vTangent;
+attribute vec3 color;
 varying vec3 vPosition;
+varying vec3 vColor;
+
+vec3 newpos;
+float alive;
 
 void main(){
-  vNormal = normal;
-  vTangent = tangent;
   vPosition = position;
+  vColor = color;
+
+  alive = color.z;
+
+  newpos = position + vec3(10000.0,10000.0,0.0)*alive;
+
   gl_Position = projectionMatrix *
     modelViewMatrix *
-    vec4(position,1.0);
+    vec4(newpos,1.0);
 }
 
 </script>
 
 <script type="x-shader/x-fragment" id="fragmentShader">
 
-varying vec3 vNormal;
-varying vec3 vTangent;
 varying vec3 vPosition;
-uniform float width;
-uniform float height;
-
-float drawLine(vec2 p1, vec2 p2) {
-  vec2 uv = gl_FragCoord.xy / vec2(width,height);
-
-  float a = abs(distance(p1, uv));
-  float b = abs(distance(p2, uv));
-  float c = abs(distance(p1, p2));
-
-  if (a >= c || b >= c){
-    return 0.0;
-  }
-
-  float p = (a + b + c) * 0.5;
-
-  // median to (p1, p2) vector
-  float h = 2.0/c * sqrt( p * (p - a) * (p - b) * (p - c));
-
-  return mix(1.0,0.0,smoothstep(0.5*0.03 ,1.5*0.03, h));
-}
-
-
-float rand(vec2 co){
-  return fract(sin(dot(co.xy,vec2(12.9898,78.233)))* 43758.5453);
-}
+varying vec3 vColor;
+uniform float size;
 
 void main(){
-  //float h = rand(vTangent.xy);
-  //if (vTangent.x<0.5){
-  //  discard;
-  //}
-  //gl_FragColor = vec4(
-  //  gl_FragCoord.x/width,
-  //  gl_FragCoord.y/height,
-  //  vTangent.x,
-  //  1.0);
-  //gl_FragColor = vec4(
-  //   max(max(drawLine(vec2(0.1, 0.1), vec2(0.1, 0.9)),
-  //           drawLine(vec2(0.1, 0.9), vec2(0.7, 0.5))),
-  //           drawLine(vec2(0.1, 0.1), vec2(0.7, 0.5))));
-  gl_FragColor = vec4(drawLine(vec2(0.1, 0.1), vec2(0.1, 0.9)));
+  
+  gl_FragColor = vec4(
+    gl_FragCoord.x/size,
+    gl_FragCoord.y/size,
+    vColor.x,
+    1.0);
 }
 
 </script>

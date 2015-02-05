@@ -21,21 +21,12 @@ $(document).ready(function(){
   var $container = $('#box');
   window.itt = 0;
 
-  var height = 800;
-  var width = 800;
+  var size = 1024;
 
-  //var bytes = 32/8; 
-  //var qbuf = new ArrayBuffer((width+2)*(height+2)*bytes);
-  //var Q = new Float32Array(qbuf);
-  //
   var uniforms = {
-    height: {
+    size: {
       type: 'f',
-      value: height
-    },
-    width: {
-      type: 'f',
-      value: width
+      value: size 
     }
   };
 
@@ -46,133 +37,109 @@ $(document).ready(function(){
       fragmentShader: fragmentShader,
       uniforms: uniforms
   });
-
-  var basicMat = new THREE.MeshBasicMaterial({color: 0xaaaaaa});
+  var basicMat = new THREE.MeshBasicMaterial({color: 0xff0000});
   var lambertMat = new THREE.MeshLambertMaterial({color: 0xaaaaaa});
+  var lineMat = new THREE.LineBasicMaterial({
+    vertexColors: THREE.VertexColors,
+    linewidth: 100
+  });
 
-  var renderer = new THREE.WebGLRenderer({alpha: true});
-  renderer.setSize(width, height);
+  var renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    preserveDrawingBuffer: true
+  });
+  renderer.setSize(size, size);
   var scene = new THREE.Scene();
 
   var camera = new THREE.OrthographicCamera(
-    width*0.5,
-    -width*0.5, 
-    height*0.5,
-    -height*0.5,
+    size*0.5,
+    -size*0.5, 
+    size*0.5,
+    -size*0.5,
     0,
     1000
   );
   camera.position.z = 500;
   scene.add(camera);
 
-  var material = new THREE.MeshBasicMaterial({color: 0xaaaa00});
-  var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), material);
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), basicMat);
   sphere.position.x = 300;
   scene.add(sphere);
   
   $container.append(renderer.domElement);
 
-  //var geometry = new THREE.BufferGeometry();
-  //// create a simple square shape. We duplicate the top left and bottom right
-  //// vertices because each vertex needs to appear once per triangle. 
-  //var vertexPositions = [ 
-    //[-1.0, -1.0,  1.0],
-    //[ 1.0, -1.0,  1.0],
-    //[ 1.0,  1.0,  1.0],
-    //[ 1.0,  1.0,  1.0],
-    //[-1.0,  1.0,  1.0],
-    //[-1.0, -1.0,  1.0]
-  //];
-  //var vertices = new Float32Array(vertexPositions.length*3); // three components per vertex
-
-  //// components of the position vector for each vertex are stored
-  //// contiguously in the buffer.
-  //for ( var i = 0; i < vertexPositions.length; i++ ){
-    //vertices[ i*3 + 0 ] = vertexPositions[i][0];
-    //vertices[ i*3 + 1 ] = vertexPositions[i][1];
-    //vertices[ i*3 + 2 ] = vertexPositions[i][2];
-  //}
-
-  //// itemSize = 3 because there are 3 values (components) per vertex
-  //geometry.addAttribute('position', new THREE.BufferAttribute(vertices,3));
-
-  //var red = new THREE.MeshBasicMaterial({color: 0xff0000});
-  //var mesh = new THREE.Mesh(geometry, material);
-
-  var segments = 1000;
-
+  var tnum = 100;
+  var vnum = 3*tnum;
+  var vertices = new Float32Array(vnum*3);
+  var colors = new Float32Array(vnum*3);
+  var normals = new Float32Array(vnum*3);
   var geometry = new THREE.BufferGeometry();
-  var lineMat = new THREE.LineBasicMaterial({
-    vertexColors: THREE.VertexColors,
-    linewidth: 100
-  });
 
-  var positions = new Float32Array(segments * 3);
-  var tangents = new Float32Array(segments * 3);
-  var colors = new Float32Array(segments * 3);
-  //
-  var stp = 1.0;
+  var flip = 0;
   
   function init(){
-    for (var i = 0; i < segments; i++){
+    for (var i = 0; i < vnum; i++){
       var i3 = i*3;
-      var x = rand()*width - width*0.5;
-      var y = rand()*width - width*0.5;
-      var z = 0;
+      var x = 0.0;
+      var y = 0.0;
+      var z = 0.0;
 
-      positions[i3] = x;
-      positions[i3 + 1] = y;
-      positions[i3 + 2] = z;
-      tangents[i3] = rand();
-      tangents[i3 + 1] = 0.0;
-      tangents[i3 + 2] = 0.0;
+      vertices[i3] = x;
+      vertices[i3 + 1] = y;
+      vertices[i3 + 2] = z;
+
+      normals[i3] = 0;
+      normals[i3 + 1] = 0;
+      normals[i3 + 2] = 1;
+
       colors[i3] = rand();
       colors[i3 + 1] = rand();
-      colors[i3 + 2] = rand();
+
+      if (i>2){
+        colors[i3 + 2] = 1;
+      }else{
+        colors[i3 + 2] = 0;
+      }
+
     }
+
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices,3));
+    geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.addAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    mesh = new THREE.Mesh(geometry, shaderMat);
+    scene.add(mesh);
+  }
+
+  function updatePos(stp){
+
+    for (var i = 0; i < vnum; i++){
+      var i3 = i*3;
+      var x = rand()*stp- stp*0.5;
+      var y = rand()*stp- stp*0.5;
+      var z = 0;
+
+      vertices[i3] += x;
+      vertices[i3 + 1] += y;
+      vertices[i3 + 2] += z;
+
+    }
+    geometry.attributes.position.needsUpdate = true;
+    geometry.attributes.color.needsUpdate = true;
   }
 
   init();
 
-  function updatePositions(){
-    for (var i = 0; i < segments; i++){
-      var i3 = i*3;
-      var x = rand()*stp - stp*0.5;
-      var y = rand()*stp - stp*0.5;
-      var z = rand()*stp - stp*0.5;
-
-      positions[i3] += x;
-      positions[i3 + 1] += y;
-      positions[i3 + 2] += z;
-
-      tangents[i3] = rand();
-      tangents[i3 + 1] = 0.0;
-      tangents[i3 + 2] = 0.0;
-
-      //colors[i3] = rand();
-      //colors[i3 + 1] = rand();
-      //colors[i3 + 2] = rand();
-
-    }
-
-    geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.addAttribute('tangent', new THREE.BufferAttribute(tangents, 3));
-    geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-    //geometry.verticesNeedUpdate = true;
-
-  }
-
-  updatePositions();
-
-
-  mesh = new THREE.Line(geometry, shaderMat);
-  scene.add(mesh);
+  var t = new Date();
   
   function animate(){
     window.itt += 1;
     requestAnimationFrame(animate);
-    updatePositions();
+    updatePos(10);
     render();
+    var t2 = new Date();
+    //console.log(t2-t);
+    t = t2;
   }
 
   function render(){
