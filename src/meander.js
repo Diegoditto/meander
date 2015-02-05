@@ -41,7 +41,7 @@ $(document).ready(function(){
 
   var vertexShader = $('#vertexShader').text();
   var fragmentShader = $('#fragmentShader').text();
-  var shaderMaterial = new THREE.ShaderMaterial({
+  var shaderMat = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
       uniforms: uniforms
@@ -65,9 +65,8 @@ $(document).ready(function(){
   camera.position.z = 500;
   scene.add(camera);
 
-  var geometry = new THREE.SphereGeometry(5, 32, 32);
   var material = new THREE.MeshBasicMaterial({color: 0xaaaa00});
-  var sphere = new THREE.Mesh(geometry, material);
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), material);
   sphere.position.x = 300;
   scene.add(sphere);
   
@@ -96,39 +95,83 @@ $(document).ready(function(){
 
   //// itemSize = 3 because there are 3 values (components) per vertex
   //geometry.addAttribute('position', new THREE.BufferAttribute(vertices,3));
-  var red = new THREE.MeshBasicMaterial({color: 0xff0000});
+
+  //var red = new THREE.MeshBasicMaterial({color: 0xff0000});
   //var mesh = new THREE.Mesh(geometry, material);
 
-  var segments = 10000;
+  var segments = 1000;
 
   var geometry = new THREE.BufferGeometry();
-  var lineMat = new THREE.LineBasicMaterial({ vertexColors: THREE.VertexColors });
+  var lineMat = new THREE.LineBasicMaterial({
+    vertexColors: THREE.VertexColors,
+    linewidth: 100
+  });
 
-  var positions = new Float32Array( segments * 3 );
-  var colors = new Float32Array( segments * 3 );
+  var positions = new Float32Array(segments * 3);
+  var tangents = new Float32Array(segments * 3);
+  var colors = new Float32Array(segments * 3);
+  //
+  var stp = 1.0;
+  
+  function init(){
+    for (var i = 0; i < segments; i++){
+      var i3 = i*3;
+      var x = rand()*width - width*0.5;
+      var y = rand()*width - width*0.5;
+      var z = 0;
 
-  var r = 800;
-
-  for ( var i = 0; i < segments; i ++ ) {
-
-    var x = Math.random() * r - r / 2;
-    var y = Math.random() * r - r / 2;
-    var z = Math.random() * r - r / 2;
-    positions[ i * 3 ] = x;
-    positions[ i * 3 + 1 ] = y;
-    positions[ i * 3 + 2 ] = z;
+      positions[i3] = x;
+      positions[i3 + 1] = y;
+      positions[i3 + 2] = z;
+      tangents[i3] = rand();
+      tangents[i3 + 1] = 0.0;
+      tangents[i3 + 2] = 0.0;
+      colors[i3] = rand();
+      colors[i3 + 1] = rand();
+      colors[i3 + 2] = rand();
+    }
   }
 
-  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+  init();
 
-  geometry.computeBoundingSphere();
+  function updatePositions(){
+    for (var i = 0; i < segments; i++){
+      var i3 = i*3;
+      var x = rand()*stp - stp*0.5;
+      var y = rand()*stp - stp*0.5;
+      var z = rand()*stp - stp*0.5;
 
-  mesh = new THREE.Line( geometry, shaderMaterial);
-  scene.add( mesh );
+      positions[i3] += x;
+      positions[i3 + 1] += y;
+      positions[i3 + 2] += z;
+
+      tangents[i3] = rand();
+      tangents[i3 + 1] = 0.0;
+      tangents[i3 + 2] = 0.0;
+
+      //colors[i3] = rand();
+      //colors[i3 + 1] = rand();
+      //colors[i3 + 2] = rand();
+
+    }
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.addAttribute('tangent', new THREE.BufferAttribute(tangents, 3));
+    geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
+    //geometry.verticesNeedUpdate = true;
+
+  }
+
+  updatePositions();
+
+
+  mesh = new THREE.Line(geometry, shaderMat);
+  scene.add(mesh);
   
   function animate(){
     window.itt += 1;
     requestAnimationFrame(animate);
+    updatePositions();
     render();
   }
 
