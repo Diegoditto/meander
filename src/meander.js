@@ -7,28 +7,115 @@ var pow = Math.pow;
 var pi = Math.PI;
 var pii = Math.PI*2.0;
 
-//window.requestAnimFrame = (function(){
-  //return  window.requestAnimationFrame ||
-          //window.webkitRequestAnimationFrame ||
-          //window.mozRequestAnimationFrame ||
-          //function(callback){
-            //window.setTimeout(callback,1000/60);
-          //};
-//})();
+var size = 1024;
+
+var uniforms = {
+  size: {
+    type: 'f',
+    value: size 
+  }
+};
+
+window.requestAnimFrame = (function(){
+  return  window.requestAnimationFrame ||
+          window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          function(callback){
+            window.setTimeout(callback,1000/60);
+          };
+})();
+
+function Meander(tnum){
+  this.tnum = tnum;
+  this.vnum = 3*tnum;
+  this.M = [];
+  this.vertices = new Float32Array(this.vnum*3);
+  this.colors = new Float32Array(this.vnum*3);
+  this.normals = new Float32Array(this.vnum*3);
+  this.geometry = new THREE.BufferGeometry();
+
+  this.setVertex = function setVertex(t,v,x,y,z){
+    var ind = t*9+3*v;
+    this.vertices[ind] = x;
+    this.vertices[ind+1] = y;
+    this.vertices[ind+2] = z;
+  }
+
+  this.setNormal = function setNormal(t,v,x,y,z){
+    var ind = t*9+3*v;
+    this.normals[ind] = x;
+    this.normals[ind+1] = y;
+    this.normals[ind+2] = z;
+  }
+
+  this.setColor = function setColor(t,v,x,y,z){
+    var ind = t*9+3*v;
+    this.colors[ind] = x;
+    this.colors[ind+1] = y;
+    this.colors[ind+2] = z;
+  }
+
+  this.initGeomBuffer = function initGeomBuffer(scene,mat){
+    for (var t=0; t<this.tnum; t++){
+      for (var v=0; v<3; v++){
+        this.setVertex(t,v,0,0,0);
+        this.setNormal(t,v,0,0,1);
+        this.setColor(t,v,0,0,1);
+      }
+    }
+    this.geometry.addAttribute('position', new THREE.BufferAttribute(this.vertices, 3));
+    this.geometry.addAttribute('color', new THREE.BufferAttribute(this.colors, 3));
+    this.geometry.addAttribute('normal', new THREE.BufferAttribute(this.normals, 3));
+
+    mesh = new THREE.Mesh(this.geometry, mat);
+    scene.add(mesh);
+    this.ntri = 1;
+  }
+
+  this.addBox = function addBox(a,b){
+
+    var ntri = this.ntri;
+
+    var ba = new THREE.Vector2();
+    ba.subVectors(b,a);
+    var c = new THREE.Vector2();
+    c.addVectors(a,new THREE.Vector3(ba.y,-ba.x));
+
+    var r = rand();
+    var g = rand();
+    this.setColor(ntri,0,r,g,0);
+    this.setColor(ntri,1,r,g,0);
+    this.setColor(ntri,2,r,g,0);
+
+    this.setVertex(ntri,0,a.x,a.y,0);
+    this.setVertex(ntri,1,b.x,b.y,0);
+    this.setVertex(ntri,2,c.x,c.y,0);
+
+    this.ntri = ntri+1;
+
+    this.geometry.attributes.position.needsUpdate = true;
+    this.geometry.attributes.color.needsUpdate = true;
+  }
+
+  this. initMeander = function initMeander(){
+    this.M.push(new THREE.Vector2(size*0.5,0));
+  }
+
+  this.stepMeander = function stepMeander(){
+    var m = this.M.pop();
+    var mn = new THREE.Vector2(-10,0);
+    mn.add(m);
+    this.addBox(m,mn);
+    this.M.push(mn);
+  }
+}
 
 $(document).ready(function(){
 
+  var tnum = 1000;
+
   var $container = $('#box');
   window.itt = 0;
-
-  var size = 1024;
-
-  var uniforms = {
-    size: {
-      type: 'f',
-      value: size 
-    }
-  };
 
   var vertexShader = $('#vertexShader').text();
   var fragmentShader = $('#fragmentShader').text();
@@ -68,72 +155,21 @@ $(document).ready(function(){
   
   $container.append(renderer.domElement);
 
-  var tnum = 800;
-  var vnum = 3*tnum;
-  var vertices = new Float32Array(vnum*3);
-  var colors = new Float32Array(vnum*3);
-  var normals = new Float32Array(vnum*3);
-  var geometry = new THREE.BufferGeometry();
+  M = new Meander(tnum);
+  M.initGeomBuffer(scene,shaderMat);
+  M.initMeander();
 
-  var flip = 0;
-  
-  function init(){
-    for (var i = 0; i < vnum; i++){
-      var i3 = i*3;
-
-      vertices[i3] = i-400;
-      vertices[i3 + 1] = i-400;
-      vertices[i3 + 2] = 0;
-
-      normals[i3] = 0;
-      normals[i3 + 1] = 0;
-      normals[i3 + 2] = 1;
-
-      colors[i3] = rand();
-      colors[i3 + 1] = rand();
-
-      if (i>2){
-        colors[i3 + 2] = 0;
-      }else{
-        colors[i3 + 2] = 0;
-      }
-
-    }
-
-
-    geometry.addAttribute('position', new THREE.BufferAttribute(vertices,3));
-    geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.addAttribute('normal', new THREE.BufferAttribute(normals, 3));
-    mesh = new THREE.Mesh(geometry, shaderMat);
-    scene.add(mesh);
-  }
-
-  function updatePos(stp){
-
-    for (var i = 0; i < vnum; i++){
-      var i3 = i*3;
-      var x = rand()*stp- stp*0.5;
-      var y = rand()*stp- stp*0.5;
-      var z = 0;
-
-      vertices[i3] += x;
-      vertices[i3 + 1] += y;
-      vertices[i3 + 2] += z;
-
-    }
-    geometry.attributes.position.needsUpdate = true;
-    geometry.attributes.color.needsUpdate = true;
-  }
-
-  init();
+  M.stepMeander();
 
   var t = new Date();
-  
   function animate(){
     window.itt += 1;
+    if (window.itt>1000){
+      return;
+    }
     requestAnimationFrame(animate);
-    updatePos(10);
     render();
+    M.stepMeander();
     var t2 = new Date();
     console.log(t2-t);
     t = t2;
