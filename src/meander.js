@@ -68,7 +68,7 @@ $(document).ready(function(){
   
   $container.append(renderer.domElement);
 
-  var tnum = 100;
+  var tnum = 800;
   var vnum = 3*tnum;
   var vertices = new Float32Array(vnum*3);
   var colors = new Float32Array(vnum*3);
@@ -80,13 +80,10 @@ $(document).ready(function(){
   function init(){
     for (var i = 0; i < vnum; i++){
       var i3 = i*3;
-      var x = 0.0;
-      var y = 0.0;
-      var z = 0.0;
 
-      vertices[i3] = x;
-      vertices[i3 + 1] = y;
-      vertices[i3 + 2] = z;
+      vertices[i3] = i-400;
+      vertices[i3 + 1] = i-400;
+      vertices[i3 + 2] = 0;
 
       normals[i3] = 0;
       normals[i3 + 1] = 0;
@@ -96,7 +93,7 @@ $(document).ready(function(){
       colors[i3 + 1] = rand();
 
       if (i>2){
-        colors[i3 + 2] = 1;
+        colors[i3 + 2] = 0;
       }else{
         colors[i3 + 2] = 0;
       }
@@ -138,7 +135,7 @@ $(document).ready(function(){
     updatePos(10);
     render();
     var t2 = new Date();
-    //console.log(t2-t);
+    console.log(t2-t);
     t = t2;
   }
 

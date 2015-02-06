@@ -52,8 +52,8 @@ uniform float size;
 void main(){
   
   gl_FragColor = vec4(
-    gl_FragCoord.x/size,
-    gl_FragCoord.y/size,
+    0.0,
+    vColor.y,
     vColor.x,
     1.0);
 }
