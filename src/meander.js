@@ -28,7 +28,6 @@ window.requestAnimFrame = (function(){
 function Meander(tnum){
   this.tnum = tnum;
   this.vnum = 3*tnum;
-  this.M = [];
   this.vertices = new Float32Array(this.vnum*3);
   this.colors = new Float32Array(this.vnum*3);
   this.normals = new Float32Array(this.vnum*3);
@@ -98,21 +97,20 @@ function Meander(tnum){
   }
 
   this. initMeander = function initMeander(){
-    this.M.push(new THREE.Vector2(size*0.5,0));
+    this.M = new THREE.Vector2(size*0.5,0);
   }
 
-  this.stepMeander = function stepMeander(){
-    var m = this.M.pop();
+  this.step = function step(){
     var mn = new THREE.Vector2(-10,0);
-    mn.add(m);
-    this.addBox(m,mn);
-    this.M.push(mn);
+    mn.add(this.M);
+    this.addBox(this.M,mn);
+    this.M = mn;
   }
 }
 
 $(document).ready(function(){
 
-  var tnum = 1000;
+  // RENDERER, SCENE AND CAMERA
 
   var $container = $('#box');
   window.itt = 0;
@@ -149,17 +147,23 @@ $(document).ready(function(){
   camera.position.z = 500;
   scene.add(camera);
 
-  var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), basicMat);
-  sphere.position.x = 300;
-  scene.add(sphere);
+  //var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), basicMat);
+  //sphere.position.x = 300;
+  //scene.add(sphere);
   
   $container.append(renderer.domElement);
 
+
+  // INIT MEANDER
+
+  var tnum = 1000;
   M = new Meander(tnum);
   M.initGeomBuffer(scene,shaderMat);
   M.initMeander();
+  M.step();
 
-  M.stepMeander();
+
+  // ANIMATE
 
   var t = new Date();
   function animate(){
@@ -169,7 +173,7 @@ $(document).ready(function(){
     }
     requestAnimationFrame(animate);
     render();
-    M.stepMeander();
+    M.step();
     var t2 = new Date();
     console.log(t2-t);
     t = t2;
@@ -178,6 +182,9 @@ $(document).ready(function(){
   function render(){
     renderer.render(scene, camera);
   }
+
+
+  // START
 
   animate();
 
