@@ -78,7 +78,9 @@ function Meander(tnum){
     var ba = new THREE.Vector2();
     ba.subVectors(b,a);
     var c = new THREE.Vector2();
-    c.addVectors(a,new THREE.Vector3(ba.y,-ba.x));
+    var diff = new THREE.Vector3(ba.y,-ba.x);
+    diff.normalize();
+    c.addVectors(a,diff.multiplyScalar(10.));
 
     var r = rand();
     var g = rand();
@@ -96,15 +98,21 @@ function Meander(tnum){
     this.geometry.attributes.color.needsUpdate = true;
   }
 
-  this. initMeander = function initMeander(){
-    this.M = new THREE.Vector2(size*0.5,0);
+  this. initMeander = function initMeander(x,y,a){
+    this.M = new THREE.Vector2(x,y);
+    this.a = a
   }
 
   this.step = function step(){
-    var mn = new THREE.Vector2(-10,0);
+    var stp = 2;
+    var stpa = 0.1
+    var a = this.a;
+    var mn = new THREE.Vector2(sin(a)*stp,cos(a)*stp);
     mn.add(this.M);
     this.addBox(this.M,mn);
     this.M = mn;
+    da = (rand()-0.5)*stpa;
+    this.a = a+da;
   }
 }
 
@@ -157,10 +165,15 @@ $(document).ready(function(){
   // INIT MEANDER
 
   var tnum = 1000;
-  M = new Meander(tnum);
-  M.initGeomBuffer(scene,shaderMat);
-  M.initMeander();
-  M.step();
+  var mnum = 100;
+
+  MM = [];
+  for (var i=0;i<mnum;i++){
+    M = new Meander(tnum);
+    M.initGeomBuffer(scene,shaderMat);
+    M.initMeander(0,-size*0.5,0);
+    MM.push(M);
+  }
 
 
   // ANIMATE
@@ -173,10 +186,16 @@ $(document).ready(function(){
     }
     requestAnimationFrame(animate);
     render();
-    M.step();
-    var t2 = new Date();
-    console.log(t2-t);
-    t = t2;
+
+    for (var i=0;i<mnum;i++){
+      MM[i].step();
+    }
+
+    if (!(window.itt%20)){
+      var t2 = new Date();
+      console.log((t2-t)/20.);
+      t = t2;
+    }
   }
 
   function render(){
