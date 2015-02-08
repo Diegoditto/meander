@@ -1,4 +1,6 @@
 var rand = Math.random;
+var round = Math.round;
+var floor = Math.floor;
 var cos = Math.cos;
 var acos = Math.acos;
 var sin = Math.sin;
@@ -7,6 +9,10 @@ var pow = Math.pow;
 var pi = Math.PI;
 var pii = Math.PI*2.0;
 var abs = Math.abs;
+
+function halfrand(x){
+  return (rand()-0.5)*x;
+}
 
 var size = 1024;
 var opacity = 0.5;
@@ -130,10 +136,10 @@ function Meander(tnum){
     this.geometry.attributes.normal.needsUpdate = true;
   }
 
-  this.initMeander = function initMeander(x,y,angle,height,red,green,blue){
-    this.red = red;
-    this.green = green;
-    this.blue = blue;
+  this.initMeander = function initMeander(x,y,angle,height,rgb){
+    this.red = rgb[0];
+    this.green = rgb[1];
+    this.blue = rgb[2];
     this.M = new THREE.Vector2(x,y);
     this.angle = angle;
     this.height = height;
@@ -177,8 +183,8 @@ function Meander(tnum){
     newpos.addVectors(this.M,step);
     this.M = newpos;
 
-    this.height += (rand()-0.5)*stph;
-    this.angle += (rand()-0.5)*stpa;
+    this.height += halfrand(stph)
+    this.angle += halfrand(stpa);
 
     return true;
   }
@@ -266,10 +272,17 @@ $(document).ready(function(){
   var stph = 5;
 
   function set(m){
-    var red = rand();
-    var green = 0;
-    var blue = rand();
-    m.initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
+    //var red = rand();
+    //var green = 0;
+    //var blue = rand();
+    rgb = color[floor(rand()*color.length)];
+    m.initMeander(
+      0,
+      0,
+      rand()*pii,
+      halfrand(height),
+      rgb
+    );
   }
 
   MM = [];
@@ -293,7 +306,10 @@ $(document).ready(function(){
     for (var i=0;i<mnum;i++){
       var keep = MM[i].step(stp,stpa,stph);
       if (!keep){
-        MM[i].softInit();
+        //MM[i].softInit();
+        MM[i].ntri = 0;
+        MM[i].alast = undefined;
+        MM[i].blast = undefined;
         set(MM[i]);
       }
     }
