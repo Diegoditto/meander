@@ -2,11 +2,11 @@
 <head>
 <style>
 body{
-  background-color: #333;
+  background-color: #fff;
   color: #000;
 }
 #box canvas {
-  background-color: #FFF;
+  background-color: #333;
 }
 .content {
   position: relative;
@@ -27,6 +27,7 @@ a, a.active, a.visited, a.hover{
 attribute vec3 color;
 varying vec3 vPosition;
 varying vec3 vColor;
+varying vec3 vNormal;
 
 vec3 newpos;
 float alive;
@@ -34,6 +35,7 @@ float alive;
 void main(){
   vPosition = position;
   vColor = color;
+  vNormal = normal;
 
   alive = normal.z;
   newpos = position + vec3(10000.0,10000.0,0.0)*alive;
@@ -49,6 +51,7 @@ void main(){
 
 varying vec3 vPosition;
 varying vec3 vColor;
+varying vec3 vNormal;
 uniform float size;
 uniform float opacity;
 
@@ -57,12 +60,16 @@ float rand(vec2 co){
 }
 
 void main(){
+
+  float pixOpacity = (1.0-abs(vNormal.y)/size*40.0);
   
   gl_FragColor = vec4(
     vColor.x,
     vColor.y,
     vColor.z,
-    opacity
+    pixOpacity*rand(vPosition.xy+vColor.xy)
+    //opacity
+    //opacity*rand(vPosition.xy+vColor.xy)
   );
 }
 

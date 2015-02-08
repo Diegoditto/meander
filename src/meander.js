@@ -6,9 +6,10 @@ var sqrt = Math.sqrt;
 var pow = Math.pow;
 var pi = Math.PI;
 var pii = Math.PI*2.0;
+var abs = Math.abs;
 
 var size = 1024;
-var opacity = 0.3;
+var opacity = 0.5;
 
 var uniforms = {
   size: {
@@ -85,7 +86,8 @@ function Meander(tnum){
     this.geometry.attributes.color.needsUpdate = true;
     this.geometry.attributes.normal.needsUpdate = true;
     this.ntri = 1;
-    this.c = undefined;
+    this.blast = undefined;
+    this.alast = undefined;
   }
 
   this.addTri = function addTri(a,b,c){
@@ -97,6 +99,8 @@ function Meander(tnum){
     ac.subVectors(c,a);
     var cross = ac.x*ab.y-ac.y*ab.x;
 
+    var h = this.height;
+
     var red = this.red;
     var green = this.green;
     var blue = this.blue;
@@ -104,9 +108,9 @@ function Meander(tnum){
     this.setColor(ntri,1,red,green,blue);
     this.setColor(ntri,2,red,green,blue);
 
-    this.setNormal(ntri,0,0,0,0);
-    this.setNormal(ntri,1,0,0,0);
-    this.setNormal(ntri,2,0,0,0);
+    this.setNormal(ntri,0,0,h,0);
+    this.setNormal(ntri,1,0,h,0);
+    this.setNormal(ntri,2,0,h,0);
 
     if (cross<0){
       this.setVertex(ntri,0,a.x,a.y,0);
@@ -126,15 +130,13 @@ function Meander(tnum){
     this.geometry.attributes.normal.needsUpdate = true;
   }
 
-  this. initMeander = function initMeander(x,y,angle,height){
-    var r = rand();
-    this.red = r;
-    this.green = r;
-    this.blue = r;
-
+  this.initMeander = function initMeander(x,y,angle,height,red,green,blue){
+    this.red = red;
+    this.green = green;
+    this.blue = blue;
     this.M = new THREE.Vector2(x,y);
-    this.angle = angle
-    this.height = height
+    this.angle = angle;
+    this.height = height;
   }
 
   this.step = function step(stp,stpa,stph){
@@ -143,35 +145,40 @@ function Meander(tnum){
     var y = this.M.y;
     var ntri = this.ntri;
     var tnum = this.tnum;
-    var size5 = size*0.5
+    var size5 = size*0.5;
 
     if (x>size5 || x<-size5 || y>size5 || y<-size5 || ntri>tnum){
       return false;
     }
 
-    stp = stp || 1;
-    stpa = stpa || 0.1;
-    stph = stph || 2;
-
-    var height = this.height;
+    var height = this.height*0.5;
     var angle = this.angle;
 
-    var ab = new THREE.Vector2(sin(angle)*stp,cos(angle)*stp);
-    var b = new THREE.Vector2();
-    b.addVectors(this.M,ab);
+    var step = new THREE.Vector2(sin(angle)*stp,cos(angle)*stp);
 
-    var c = new THREE.Vector2();
-    var diff = new THREE.Vector3(ab.y,-ab.x);
+    var diff = new THREE.Vector3(step.y,-step.x);
     diff.normalize();
-    c.addVectors(this.M,diff.multiplyScalar(height));
+    diff.multiplyScalar(height);
 
-    this.addTri(this.M,b,c);
-    this.M = b;
-    da = (rand()-0.5)*stpa;
-    dh = (rand()-0.5)*stph;
-    height += dh;
-    this.height = height;
-    this.angle = angle+da;
+    var a = new THREE.Vector2();
+    a.addVectors(this.M,diff);
+    var b = new THREE.Vector2();
+    b.subVectors(this.M,diff);
+
+    if (this.alast){
+      this.addTri(a,b,this.blast);
+      this.addTri(this.alast,this.blast,a);
+    }
+
+    this.alast = a;
+    this.blast = b;
+
+    var newpos = new THREE.Vector2();
+    newpos.addVectors(this.M,step);
+    this.M = newpos;
+
+    this.height += (rand()-0.5)*stph;
+    this.angle += (rand()-0.5)*stpa;
 
     return true;
   }
@@ -249,28 +256,32 @@ $(document).ready(function(){
 
   // INIT MEANDER
 
-  var tnum = 1000;
-  var mnum = 1;
+  var tnum = 2000;
+  var mnum = 100;
+  var maxitt = 10000;
 
-  var stp = 10;
-  var stpa = 1.0;
-  var stph = 5.0;
+  var height = 15;
+  var stp = 1;
+  var stpa = 0.4;
+  var stph = 5;
 
   MM = [];
   for (var i=0;i<mnum;i++){
     M = new Meander(tnum);
     M.initGeomBuffer(scene,shaderMat);
-    M.initMeander(0,0,rand()*pii,(rand()-0.5)*20);
+    var red = rand();
+    var green = 0;
+    var blue = rand();
+    M.initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
     MM.push(M);
   }
 
 
   // ANIMATE
 
-  var t = new Date();
   function animate(){
     window.itt += 1;
-    if (window.itt>10000){
+    if (window.itt>maxitt){
       return;
     }
     requestAnimationFrame(animate);
@@ -280,14 +291,11 @@ $(document).ready(function(){
       var keep = MM[i].step(stp,stpa,stph);
       if (!keep){
         MM[i].softInit();
-        MM[i].initMeander(0,0,rand()*pii,(rand()-0.5)*20);
+        var red = 0.;
+        var green = rand();
+        var blue = rand();
+        MM[i].initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
       }
-    }
-
-    if (!(window.itt%20)){
-      var t2 = new Date();
-      //console.log((t2-t)/20.);
-      t = t2;
     }
   }
 
