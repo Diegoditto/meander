@@ -30,6 +30,7 @@ window.requestAnimFrame = (function(){
           };
 })();
 
+
 function Meander(tnum){
   this.tnum = tnum;
   this.vnum = 3*tnum;
@@ -65,7 +66,6 @@ function Meander(tnum){
     this.geometry.addAttribute('color', new THREE.BufferAttribute(this.colors, 3));
     this.geometry.addAttribute('normal', new THREE.BufferAttribute(this.normals, 3));
 
-
     mesh = new THREE.Mesh(this.geometry, mat);
     this.mesh = mesh;
     scene.add(mesh);
@@ -85,23 +85,16 @@ function Meander(tnum){
     this.geometry.attributes.color.needsUpdate = true;
     this.geometry.attributes.normal.needsUpdate = true;
     this.ntri = 1;
+    this.c = undefined;
   }
 
-  this.addBox = function addBox(a,b){
+  this.addTri = function addTri(a,b,c){
 
     var ntri = this.ntri;
-    var h = this.h;
-
     var ab = new THREE.Vector2();
     ab.subVectors(b,a);
-    var c = new THREE.Vector2();
-    var diff = new THREE.Vector3(ab.y,-ab.x);
-    diff.normalize();
-    c.addVectors(a,diff.multiplyScalar(h));
-
     var ac = new THREE.Vector2();
     ac.subVectors(c,a);
-
     var cross = ac.x*ab.y-ac.y*ab.x;
 
     var red = this.red;
@@ -133,15 +126,15 @@ function Meander(tnum){
     this.geometry.attributes.normal.needsUpdate = true;
   }
 
-  this. initMeander = function initMeander(x,y,a,h){
+  this. initMeander = function initMeander(x,y,angle,height){
     var r = rand();
     this.red = r;
     this.green = r;
     this.blue = r;
 
     this.M = new THREE.Vector2(x,y);
-    this.a = a
-    this.h = h
+    this.angle = angle
+    this.height = height
   }
 
   this.step = function step(stp,stpa,stph){
@@ -159,17 +152,26 @@ function Meander(tnum){
     stp = stp || 1;
     stpa = stpa || 0.1;
     stph = stph || 2;
-    var a = this.a;
-    var h = this.h;
-    var mn = new THREE.Vector2(sin(a)*stp,cos(a)*stp);
-    mn.add(this.M);
-    this.addBox(this.M,mn);
-    this.M = mn;
+
+    var height = this.height;
+    var angle = this.angle;
+
+    var ab = new THREE.Vector2(sin(angle)*stp,cos(angle)*stp);
+    var b = new THREE.Vector2();
+    b.addVectors(this.M,ab);
+
+    var c = new THREE.Vector2();
+    var diff = new THREE.Vector3(ab.y,-ab.x);
+    diff.normalize();
+    c.addVectors(this.M,diff.multiplyScalar(height));
+
+    this.addTri(this.M,b,c);
+    this.M = b;
     da = (rand()-0.5)*stpa;
     dh = (rand()-0.5)*stph;
-    h += dh;
-    this.h = h;
-    this.a = a+da;
+    height += dh;
+    this.height = height;
+    this.angle = angle+da;
 
     return true;
   }
@@ -185,6 +187,23 @@ $(document).ready(function(){
 
   var $container = $('#box');
   window.itt = 0;
+
+  //var loader = new THREE.TextureLoader();
+  //loader.load(
+    //'textures/colors.gif',
+    //function(texture){
+      //var texmat = new THREE.MeshBasicMaterial({
+        //map: texture
+       //});
+       //console.log('loaded: textures/colors.gif');
+    //},
+    //function(xhr){
+      //console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    //},
+    //function(xhr){
+      //console.log('An error happened');
+    //}
+  //);
 
   var vertexShader = $('#vertexShader').text();
   var fragmentShader = $('#fragmentShader').text();
@@ -231,7 +250,11 @@ $(document).ready(function(){
   // INIT MEANDER
 
   var tnum = 1000;
-  var mnum = 200;
+  var mnum = 1;
+
+  var stp = 10;
+  var stpa = 1.0;
+  var stph = 5.0;
 
   MM = [];
   for (var i=0;i<mnum;i++){
@@ -254,7 +277,7 @@ $(document).ready(function(){
     render();
 
     for (var i=0;i<mnum;i++){
-      var keep = MM[i].step(1.0,1,5);
+      var keep = MM[i].step(stp,stpa,stph);
       if (!keep){
         MM[i].softInit();
         MM[i].initMeander(0,0,rand()*pii,(rand()-0.5)*20);
