@@ -78,7 +78,7 @@ function Meander(tnum){
       for (var v=0; v<3; v++){
         this.setVertex(t,v,0,0,0);
         this.setNormal(t,v,0,0,1);
-        this.setColor(t,v,0,0,1);
+        this.setColor(t,v,0,0,0);
       }
     }
     this.geometry.attributes.position.needsUpdate = true;
@@ -104,11 +104,16 @@ function Meander(tnum){
 
     var cross = ac.x*ab.y-ac.y*ab.x;
 
-    var r = this.r;
-    var g = this.g;
-    this.setColor(ntri,0,r,g,0);
-    this.setColor(ntri,1,r,g,0);
-    this.setColor(ntri,2,r,g,0);
+    var red = this.red;
+    var green = this.green;
+    var blue = this.blue;
+    this.setColor(ntri,0,red,green,blue);
+    this.setColor(ntri,1,red,green,blue);
+    this.setColor(ntri,2,red,green,blue);
+
+    this.setNormal(ntri,0,0,0,0);
+    this.setNormal(ntri,1,0,0,0);
+    this.setNormal(ntri,2,0,0,0);
 
     if (cross<0){
       this.setVertex(ntri,0,a.x,a.y,0);
@@ -125,22 +130,35 @@ function Meander(tnum){
 
     this.geometry.attributes.position.needsUpdate = true;
     this.geometry.attributes.color.needsUpdate = true;
+    this.geometry.attributes.normal.needsUpdate = true;
   }
 
   this. initMeander = function initMeander(x,y,a,h){
     var r = rand();
-    this.r = r;
-    this.g = r;
+    this.red = r;
+    this.green = r;
+    this.blue = r;
+
     this.M = new THREE.Vector2(x,y);
     this.a = a
     this.h = h
   }
 
   this.step = function step(stp,stpa,stph){
+
+    var x = this.M.x;
+    var y = this.M.y;
+    var ntri = this.ntri;
+    var tnum = this.tnum;
+    var size5 = size*0.5
+
+    if (x>size5 || x<-size5 || y>size5 || y<-size5 || ntri>tnum){
+      return false;
+    }
+
     stp = stp || 1;
     stpa = stpa || 0.1;
     stph = stph || 2;
-    var size5 = size*0.5
     var a = this.a;
     var h = this.h;
     var mn = new THREE.Vector2(sin(a)*stp,cos(a)*stp);
@@ -150,17 +168,9 @@ function Meander(tnum){
     da = (rand()-0.5)*stpa;
     dh = (rand()-0.5)*stph;
     h += dh;
-    //if (h<0.){
-      //h = 0;
-    //}
     this.h = h;
     this.a = a+da;
 
-    var x = this.M.x;
-    var y = this.M.y;
-    if (x>size5 || x<-size5 || y>size5 || y<-size5){
-      return false;
-    }
     return true;
   }
 
@@ -228,7 +238,6 @@ $(document).ready(function(){
     M = new Meander(tnum);
     M.initGeomBuffer(scene,shaderMat);
     M.initMeander(0,0,rand()*pii,(rand()-0.5)*20);
-    //M.initMeander(size*(rand()-0.5),-size*0.5,0,(rand()-0.5)*2);
     MM.push(M);
   }
 
@@ -245,8 +254,8 @@ $(document).ready(function(){
     render();
 
     for (var i=0;i<mnum;i++){
-      var inside = MM[i].step(1.0,1,5);
-      if (!inside){
+      var keep = MM[i].step(1.0,1,5);
+      if (!keep){
         MM[i].softInit();
         MM[i].initMeander(0,0,rand()*pii,(rand()-0.5)*20);
       }

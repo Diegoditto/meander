@@ -35,7 +35,7 @@ void main(){
   vPosition = position;
   vColor = color;
 
-  alive = color.z;
+  alive = normal.z;
   newpos = position + vec3(10000.0,10000.0,0.0)*alive;
 
   gl_Position = projectionMatrix *
@@ -60,8 +60,8 @@ void main(){
   
   gl_FragColor = vec4(
     vColor.x,
-    0.0,
     vColor.y,
+    vColor.z,
     opacity
   );
 }
