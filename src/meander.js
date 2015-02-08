@@ -265,17 +265,20 @@ $(document).ready(function(){
   var stpa = 0.4;
   var stph = 5;
 
+  function set(m){
+    var red = rand();
+    var green = 0;
+    var blue = rand();
+    m.initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
+  }
+
   MM = [];
   for (var i=0;i<mnum;i++){
     M = new Meander(tnum);
     M.initGeomBuffer(scene,shaderMat);
-    var red = rand();
-    var green = 0;
-    var blue = rand();
-    M.initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
     MM.push(M);
+    set(M);
   }
-
 
   // ANIMATE
 
@@ -291,10 +294,7 @@ $(document).ready(function(){
       var keep = MM[i].step(stp,stpa,stph);
       if (!keep){
         MM[i].softInit();
-        var red = 0.;
-        var green = rand();
-        var blue = rand();
-        MM[i].initMeander(0,0,rand()*pii,(rand()-0.5)*height,red,green,blue);
+        set(MM[i]);
       }
     }
   }

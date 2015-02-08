@@ -61,7 +61,7 @@ float rand(vec2 co){
 
 void main(){
 
-  float pixOpacity = (1.0-abs(vNormal.y)/size*40.0);
+  float pixOpacity = (1.0-clamp(abs(vNormal.y)/size*40.0,0.0,0.95));
   
   gl_FragColor = vec4(
     vColor.x,
@@ -74,9 +74,6 @@ void main(){
 }
 
 </script>
-
-
-
 </head>
 <body>
 <div class="content">
