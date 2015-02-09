@@ -17,8 +17,7 @@ function halfrand(x){
 
 var size = 1024;
 var size5 = size*0.5;
-window.size = size;
-window.size5 = size5;
+var mousedown = false;
 
 var opacity = 0.5;
 
@@ -154,7 +153,6 @@ function Meander(tnum){
     var y = this.xy.y;
     var ntri = this.ntri;
     var tnum = this.tnum;
-    var size5 = size*0.5;
 
     if (ntri>tnum){
       this.ntri = 0;
@@ -192,12 +190,14 @@ function Meander(tnum){
     da.multiplyScalar(15);
     this.vxy.add(da);
 
-    var dx = (window.mouseX-x);
-    var dy = (window.mouseY-y);
-    //var dd = sqrt(dx*dx+dy*dy);
-    var mouseStep = new THREE.Vector2(dx,dy);
-    mouseStep.multiplyScalar(0.2);
-    this.vxy.add(mouseStep);
+    if (mousedown){
+      var dx = (window.mouseX-x);
+      var dy = (window.mouseY-y);
+      //var dd = sqrt(dx*dx+dy*dy);
+      var mouseStep = new THREE.Vector2(dx,dy);
+      mouseStep.multiplyScalar(0.2);
+      this.vxy.add(mouseStep);
+    }
 
     this.vxy.multiplyScalar(0.3);
 
@@ -218,10 +218,20 @@ $(document).ready(function(){
 
   var $container = $('#box');
   window.itt = 0;
-  var size5 = window.size5;
+
+  var offset = $container.offset();
+
+  $(window).resize(function () {
+    offset = $container.offset();
+  });
+
+  $(document).mousedown(function() {
+    mousedown = true;
+  }).bind('mouseup mouseleave', function() {
+    mousedown = false;
+  });
 
   $(document).mousemove(function(e) {
-    var offset = $container.offset();
     window.mouseX = size5-e.pageX+offset.left;
     window.mouseY = size5-e.pageY+offset.top;
   });
@@ -251,33 +261,29 @@ $(document).ready(function(){
   var scene = new THREE.Scene();
 
   var camera = new THREE.OrthographicCamera(
-    size*0.5,
-    -size*0.5, 
-    size*0.5,
-    -size*0.5,
+    size5,
+    -size5, 
+    size5,
+    -size5,
     0,
     1000
   );
   camera.position.z = 500;
   scene.add(camera);
 
-  //var sphere = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 32), basicMat);
-  //sphere.position.x = 300;
-  //scene.add(sphere);
-  
   $container.append(renderer.domElement);
 
 
   // INIT MEANDER
 
-  var tnum = 100;
-  var mnum = 200;
-  var maxitt = 10000;
+  var tnum = 130;
+  var mnum = 100;
+  var maxitt = 100000;
 
   var height = 100;
   var stp = 1;
   var stpa = 0.4;
-  var stph = 10;
+  var stph = 2;
 
   function set(m){
     rgb = color[floor(rand()*color.length)];
