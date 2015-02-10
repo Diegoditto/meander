@@ -23,7 +23,7 @@ var winHeight = size;
 
 var mousedown = false;
 
-var opacity = 0.5;
+var opacity = 0.95;
 
 var uniforms = {
   size: {
@@ -280,6 +280,14 @@ $(document).ready(function(){
     windowAdjust();
   });
 
+  $(document).on('touchstart',function (e){
+    mousedown = true;
+  });
+
+  $(document).on('touchend',function (e){
+    mousedown = false;
+  });
+
   $(document).mousedown(function() {
     mousedown = true;
   }).bind('mouseup mouseleave', function() {
@@ -296,7 +304,7 @@ $(document).ready(function(){
   // INIT MEANDER
 
   var tnum = 130;
-  var mnum = 200;
+  var mnum = 300;
   var maxitt = 100000;
 
   var pathWidth = 100;

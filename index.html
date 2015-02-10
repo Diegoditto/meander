@@ -54,17 +54,23 @@ table {
   small { font-size: 80%; }
 
 body{
-  background-color: #fff;
-  color: #000;
+  background-color: #000;
+  color: #555;
   padding: 0px;
   margin: 0px;
   font-family: 'Droid Sans', sans-serif;
   -webkit-font-smoothing: antialiased; /* Fix for webkit rendering */
   -webkit-text-size-adjust: 100%;
   font-style: italic;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 #box canvas {
-  background-color: #fff;
+  /*background-color: #fff;*/
   padding: 0px;
   margin: 0px;
 }
@@ -84,7 +90,7 @@ body{
   margin: 0 auto;
 }
 a, a.active, a.visited, a.hover{
-  color: #000;
+  color: #555;
   text-decoration: none;
 }
 </style>
@@ -130,11 +136,11 @@ float rand(vec2 co){
 
 void main(){
 
-  float pixOpacity = (1.0-clamp(abs(vNormal.y)/size*40.0,0.0,0.95));
+  float pixOpacity = (1.0-clamp(abs(vNormal.y)/size*40.0,0.0,0.95))*opacity;
   
   gl_FragColor = vec4(
     vColor,
-    pixOpacity*rand(vPosition.xy+vColor.xy)
+    pixOpacity*rand(vPosition.xz+vColor.xy)
     //opacity
     //opacity*rand(vPosition.xy+vColor.xy)
   );
