@@ -15,8 +15,12 @@ function halfrand(x){
   return (rand()-0.5)*x;
 }
 
-var size = 1024;
-var size5 = size*0.5;
+size = 1024;
+size5 = size*0.5;
+
+var winWidth = size;
+var winHeight = size;
+
 var mousedown = false;
 
 var opacity = 0.5;
@@ -42,7 +46,6 @@ window.requestAnimFrame = (function(){
           };
 })();
 
-
 function Meander(tnum){
   this.tnum = tnum;
   this.vnum = 3*tnum;
@@ -56,21 +59,21 @@ function Meander(tnum){
     this.vertices[ind] = x;
     this.vertices[ind+1] = y;
     this.vertices[ind+2] = z;
-  }
+  };
 
   this.setNormal = function setNormal(t,v,x,y,z){
     var ind = t*9+3*v;
     this.normals[ind] = x;
     this.normals[ind+1] = y;
     this.normals[ind+2] = z;
-  }
+  };
 
   this.setColor = function setColor(t,v,rgb){
     var ind = t*9+3*v;
     this.colors[ind] = rgb[0];
     this.colors[ind+1] = rgb[1];
     this.colors[ind+2] = rgb[2];
-  }
+  };
 
   this.initGeomBuffer = function initGeomBuffer(scene,mat){
 
@@ -83,7 +86,7 @@ function Meander(tnum){
     scene.add(mesh);
 
     this.softInit();
-  }
+  };
 
   this.softInit = function softInit(){
     for (var t=0; t<this.tnum; t++){
@@ -99,7 +102,7 @@ function Meander(tnum){
     this.ntri = 0;
     this.blast = undefined;
     this.alast = undefined;
-  }
+  };
 
   this.addTri = function addTri(a,b,c){
 
@@ -110,7 +113,7 @@ function Meander(tnum){
     ac.subVectors(c,a);
     var cross = ac.x*ab.y-ac.y*ab.x;
 
-    var h = this.height;
+    var pw = this.pathWidth;
 
     var rgb = this.rgb;
 
@@ -118,9 +121,9 @@ function Meander(tnum){
     this.setColor(ntri,1,rgb);
     this.setColor(ntri,2,rgb);
 
-    this.setNormal(ntri,0,0,h,0);
-    this.setNormal(ntri,1,0,h,0);
-    this.setNormal(ntri,2,0,h,0);
+    this.setNormal(ntri,0,0,pw,0);
+    this.setNormal(ntri,1,0,pw,0);
+    this.setNormal(ntri,2,0,pw,0);
 
     if (cross<0){
       this.setVertex(ntri,0,a.x,a.y,0);
@@ -138,14 +141,14 @@ function Meander(tnum){
     this.geometry.attributes.position.needsUpdate = true;
     this.geometry.attributes.color.needsUpdate = true;
     this.geometry.attributes.normal.needsUpdate = true;
-  }
+  };
 
-  this.initMeander = function initMeander(xy,vxy,height,rgb){
+  this.initMeander = function initMeander(xy,vxy,pathWidth,rgb){
     this.rgb = rgb;
     this.xy = xy;
     this.vxy = vxy;
-    this.height = height;
-  }
+    this.pathWidth = pathWidth;
+  };
 
   this.mstep = function mstep(stp,stpa,stph){
 
@@ -158,12 +161,12 @@ function Meander(tnum){
       this.ntri = 0;
     }
 
-    var height = this.height*0.5;
+    var pathWidth = this.pathWidth*0.5;
 
     var step = this.vxy;
     var diff = new THREE.Vector3(step.y,-step.x);
     diff.normalize();
-    diff.multiplyScalar(height);
+    diff.multiplyScalar(pathWidth);
 
     var a = new THREE.Vector2();
     a.addVectors(this.xy,diff);
@@ -182,7 +185,7 @@ function Meander(tnum){
     newpos.addVectors(this.xy,step);
     this.xy = newpos;
 
-    this.height += halfrand(stph)
+    this.pathWidth += halfrand(stph);
     var ranAngle = rand()*pii;
     var ranx = cos(ranAngle);
     var rany = sin(ranAngle);
@@ -203,11 +206,11 @@ function Meander(tnum){
 
     this.xy.add(this.vxy);
 
-  }
+  };
 
   this.remove = function remove(scene){
     scene.remove(this.mesh);
-  }
+  };
 }
 
 
@@ -219,22 +222,6 @@ $(document).ready(function(){
   var $container = $('#box');
   window.itt = 0;
 
-  var offset = $container.offset();
-
-  $(window).resize(function () {
-    offset = $container.offset();
-  });
-
-  $(document).mousedown(function() {
-    mousedown = true;
-  }).bind('mouseup mouseleave', function() {
-    mousedown = false;
-  });
-
-  $(document).mousemove(function(e) {
-    window.mouseX = size5-e.pageX+offset.left;
-    window.mouseY = size5-e.pageY+offset.top;
-  });
 
   var vertexShader = $('#vertexShader').text();
   var fragmentShader = $('#fragmentShader').text();
@@ -255,32 +242,64 @@ $(document).ready(function(){
     alpha: true,
     preserveDrawingBuffer: false
   });
-  renderer.setSize(size, size);
-  renderer.setPixelRatio( window.devicePixelRatio || 1 );
 
   var scene = new THREE.Scene();
 
   var camera = new THREE.OrthographicCamera(
-    size5,
-    -size5, 
-    size5,
-    -size5,
-    0,
-    1000
+    winWidth*0.5, -winWidth*0.5, 
+    winHeight*0.5, -winHeight*0.5,
+    0, 1000
   );
   camera.position.z = 500;
   scene.add(camera);
 
   $container.append(renderer.domElement);
 
+  function windowAdjust() {
+    winWidth = window.innerWidth;
+    winHeight = window.innerHeight;
+    //aspect = window.innerWidth/window.innerHeight;
+
+    //camera.aspect = aspect;
+
+    camera.left = winWidth*0.5;
+    camera.right = -winWidth*0.5;
+    camera.top = winHeight*0.5;
+    camera.bottom = -winHeight*0.5;
+
+    camera.updateProjectionMatrix();
+    renderer.setSize(winWidth,winHeight);
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+  }
+
+  var offset = $container.offset();
+
+  windowAdjust();
+  $(window).resize(function () {
+    offset = $container.offset();
+    windowAdjust();
+  });
+
+  $(document).mousedown(function() {
+    mousedown = true;
+  }).bind('mouseup mouseleave', function() {
+    mousedown = false;
+  });
+
+  $(document).mousemove(function(e) {
+    window.mouseX = winWidth*0.5-e.pageX+offset.left;
+    window.mouseY = winHeight*0.5-e.pageY+offset.top;
+  });
+
+
 
   // INIT MEANDER
 
   var tnum = 130;
-  var mnum = 100;
+  var mnum = 200;
   var maxitt = 100000;
 
-  var height = 100;
+  var pathWidth = 100;
   var stp = 1;
   var stpa = 0.4;
   var stph = 2;
@@ -290,7 +309,7 @@ $(document).ready(function(){
     m.initMeander(
       new THREE.Vector2(0,0),
       new THREE.Vector2(0,1),
-      halfrand(height),
+      halfrand(pathWidth),
       rgb
     );
   }
