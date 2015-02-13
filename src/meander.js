@@ -76,7 +76,6 @@ function Meander(tnum){
   };
 
   this.initGeomBuffer = function initGeomBuffer(scene,mat){
-
     this.geometry.addAttribute('position', new THREE.BufferAttribute(this.vertices, 3));
     this.geometry.addAttribute('color', new THREE.BufferAttribute(this.colors, 3));
     this.geometry.addAttribute('normal', new THREE.BufferAttribute(this.normals, 3));
@@ -121,9 +120,10 @@ function Meander(tnum){
     this.setColor(ntri,1,rgb);
     this.setColor(ntri,2,rgb);
 
-    this.setNormal(ntri,0,0,pw,0);
-    this.setNormal(ntri,1,0,pw,0);
-    this.setNormal(ntri,2,0,pw,0);
+    var rnd = rand();
+    this.setNormal(ntri,0,rnd,pw,0);
+    this.setNormal(ntri,1,rnd+2,pw,0);
+    this.setNormal(ntri,2,rnd+1,pw,0);
 
     if (cross<0){
       this.setVertex(ntri,0,a.x,a.y,0);
@@ -186,6 +186,12 @@ function Meander(tnum){
     this.xy = newpos;
 
     this.pathWidth += halfrand(stph);
+    if (this.pathWidth>200){
+      this.pathWidth = 200;
+    }
+    if (this.pathWidth<-200){
+      this.pathWidth = -200;
+    }
     var ranAngle = rand()*pii;
     var ranx = cos(ranAngle);
     var rany = sin(ranAngle);
@@ -216,6 +222,7 @@ function Meander(tnum){
 
 $(document).ready(function(){
 
+  if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
   // RENDERER, SCENE AND CAMERA
 
@@ -280,37 +287,34 @@ $(document).ready(function(){
     windowAdjust();
   });
 
-  $(document).on('touchstart',function (e){
+  $(document).click(function(){
     mousedown = true;
+    setTimeout(function(){
+      mousedown = false;
+    },500);
   });
 
-  $(document).on('touchend',function (e){
+  $(document).on('mousedown touchstart touchmove',function (e){
+    mousedown = true;
+  });
+  $(document).on('mouseup mouseleave touchend touchcancel',function (e){
     mousedown = false;
   });
 
-  $(document).mousedown(function() {
-    mousedown = true;
-  }).bind('mouseup mouseleave', function() {
-    mousedown = false;
-  });
-
-  $(document).mousemove(function(e) {
+  $(document).on('touchmove mousemove touchstart',function(e) {
     window.mouseX = winWidth*0.5-e.pageX+offset.left;
     window.mouseY = winHeight*0.5-e.pageY+offset.top;
   });
 
-
-
   // INIT MEANDER
 
-  var tnum = 130;
-  var mnum = 300;
-  var maxitt = 100000;
+  var tnum = 80;
+  var mnum = 220;
 
-  var pathWidth = 100;
+  var pathWidth = 70;
   var stp = 1;
   var stpa = 0.4;
-  var stph = 2;
+  var stph = 3;
 
   function set(m){
     rgb = color[floor(rand()*color.length)];
@@ -334,12 +338,8 @@ $(document).ready(function(){
 
   function animate(){
     window.itt += 1;
-    if (window.itt>maxitt){
-      return;
-    }
     requestAnimationFrame(animate);
     render();
-
     for (var s=0;s<2;s++){
       for (var i=0;i<mnum;i++){
         MM[i].mstep(stp,stpa,stph);

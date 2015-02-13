@@ -1,7 +1,33 @@
-<html>
+<html lang="en">
 <head>
-<style>
+<meta charset="utf-8" />
+<title>Inconvergent - Meander</title>
 
+<meta name="twitter:card" content="photo">
+<meta name="twitter:site" content="@inconvergent">
+<meta name="twitter:creator" content="@inconvergent">
+<meta name="twitter:url" content="http://inconvergent.github.io/meander/">
+<meta name="twitter:title" content="Inconvergent - Meander">
+<meta name="twitter:description" content="Meander, an interactive WebGL experiment">
+<meta name="twitter:image" content="http://inconvergent.github.io/meander/img/img.jpg">
+<meta name="twitter:image:width" content="800">
+<meta name="twitter:image:height" content="800">
+
+<meta property="og:title" content="Inconvergent - Meander" />
+<meta property="og:site_name" content="Inconvergent - Meander" />
+<meta property="og:url" content="http://inconvergent.github.io/meander/" />
+<meta property="og:image" content="http://inconvergent.github.io/meander/img/img.jpg" />
+<meta property="og:type" content="website" />
+<meta property="og:description" content="Meander, an interactive WebGL experiment" />
+<meta name="description" content="Meander, an interactive WebGL experiment" />
+
+<meta name="author" content="Inconvergent, Anders Hoff" />
+<meta name="keywords" content="generative,art,animation,inconvergent,computational,webgl"/>
+<meta name="viewport" content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+
+<link href='//fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'>
+
+<style>
 /* #Reset & Basics (Inspired by E. Meyers)
 ================================================== */
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
@@ -30,7 +56,7 @@ table {
 /* #Typography
 ================================================== */
   h1, h2, h3, h4, h5, h6 {
-    color: #181818;
+    color: #FFF;
     /*font-family: 'Droid Serif', serif;*/
     font-family: 'Droid Sans', sans-serif;
     line-height: 30px;
@@ -43,19 +69,12 @@ table {
   h1,.h1 { font-size: 46px; line-height: 50px; margin-bottom: 14px;}
   h2,.h2 { font-size: 35px; line-height: 40px; margin-bottom: 10px; }
   h3,.h3 { font-size: 28px; line-height: 34px; margin-bottom: 8px; }
-  .subheader { color: #777; }
 
-  p { margin: 0 0 20px 0; }
-  p img { margin: 0; }
-  p.lead { font-size: 21px; line-height: 27px; color: #777;  }
-
-  em { font-style: italic; }
-  strong { font-weight: bold; color: #333; }
-  small { font-size: 80%; }
+  strong { font-weight: bold; color: #FFF; }
 
 body{
   background-color: #000;
-  color: #555;
+  color: #FFF;
   padding: 0px;
   margin: 0px;
   font-family: 'Droid Sans', sans-serif;
@@ -81,22 +100,24 @@ body{
   padding: 10px;
   text-align: left;
   width: 300px;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 .content {
   position: relative;
-  width: 100%; 
   text-align: center;
   margin: 0 auto;
 }
 a, a.active, a.visited, a.hover{
-  color: #555;
+  color: #FFF;
   text-decoration: none;
 }
 </style>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script src="lib/three.min.js"></script>
+<script src="lib/Detector.js"></script>
 <script src="color/color.js"></script>
+
 <script type="x-shader/x-vertex" id="vertexShader">
 
 attribute vec3 color;
@@ -104,17 +125,12 @@ varying vec3 vPosition;
 varying vec3 vColor;
 varying vec3 vNormal;
 
-vec3 newpos;
-float alive;
-
 void main(){
   vPosition = position;
   vColor = color;
   vNormal = normal;
-
-  alive = normal.z;
-  newpos = position + vec3(10000.0,10000.0,0.0)*alive;
-
+  float alive = normal.z;
+  vec3 newpos = position + vec3(10000.0,10000.0,0.0)*alive;
   gl_Position = projectionMatrix *
     modelViewMatrix *
     vec4(newpos,1.0);
@@ -135,27 +151,34 @@ float rand(vec2 co){
 }
 
 void main(){
-
   float pixOpacity = (1.0-clamp(abs(vNormal.y)/size*40.0,0.0,0.95))*opacity;
-  
   gl_FragColor = vec4(
     vColor,
-    pixOpacity*rand(vPosition.xz+vColor.xy)
-    //opacity
-    //opacity*rand(vPosition.xy+vColor.xy)
+    pixOpacity*rand(vNormal.xy+vColor.xy)
   );
 }
 
 </script>
-<link href='http://fonts.googleapis.com/css?family=Droid+Sans:400,700' rel='stylesheet' type='text/css'>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-10523482-7', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
 </head>
 <body>
 <div class="content">
   <div class="message">
     <h1 class="h2"><strong>Meander</strong></h1>
     <div>
-      <strong>Tap the screen or use the left mouse button.</strong><br><hr>
-      <a style="margin-top:100px" href="http://inconvergent.net">inconvergent.net</a><br>
+      <strong>Tap or click the screen.</strong><br><hr>
+      <a href="http://inconvergent.net">inconvergent.net</a><br><br>
     </div>
   </div>
   <div id="box"></div>
