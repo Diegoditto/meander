@@ -11,6 +11,8 @@ var pi = Math.PI;
 var pii = Math.PI*2.0;
 var abs = Math.abs;
 
+ndarray = ndarray.ndarray;
+
 function halfrand(x){
   return (rand()-0.5)*x;
 }
@@ -47,36 +49,22 @@ window.requestAnimFrame = (function(){
 })();
 
 function Meander(tnum){
+  var tnum = tnum;
+  var vnum = 3*tnum;
   this.tnum = tnum;
-  this.vnum = 3*tnum;
-  this.vertices = new Float32Array(this.vnum*3);
+  this.vnum = vnum;
+  this.positions = new Float32Array(this.vnum*3);
   this.colors = new Float32Array(this.vnum*3);
   this.normals = new Float32Array(this.vnum*3);
+
+  this.ndpositions = ndarray(this.positions,[vnum,3]);
+  this.ndcolors = ndarray(this.colors,[vnum,3]);
+  this.ndnormals = ndarray(this.normals,[vnum,3]);
+
   this.geometry = new THREE.BufferGeometry();
 
-  this.setVertex = function setVertex(t,v,x,y,z){
-    var ind = t*9+3*v;
-    this.vertices[ind] = x;
-    this.vertices[ind+1] = y;
-    this.vertices[ind+2] = z;
-  };
-
-  this.setNormal = function setNormal(t,v,x,y,z){
-    var ind = t*9+3*v;
-    this.normals[ind] = x;
-    this.normals[ind+1] = y;
-    this.normals[ind+2] = z;
-  };
-
-  this.setColor = function setColor(t,v,rgb){
-    var ind = t*9+3*v;
-    this.colors[ind] = rgb[0];
-    this.colors[ind+1] = rgb[1];
-    this.colors[ind+2] = rgb[2];
-  };
-
   this.initGeomBuffer = function initGeomBuffer(scene,mat){
-    this.geometry.addAttribute('position', new THREE.BufferAttribute(this.vertices, 3));
+    this.geometry.addAttribute('position', new THREE.BufferAttribute(this.positions, 3));
     this.geometry.addAttribute('color', new THREE.BufferAttribute(this.colors, 3));
     this.geometry.addAttribute('normal', new THREE.BufferAttribute(this.normals, 3));
 
@@ -88,12 +76,16 @@ function Meander(tnum){
   };
 
   this.softInit = function softInit(){
-    for (var t=0; t<this.tnum; t++){
-      for (var v=0; v<3; v++){
-        this.setVertex(t,v,0,0,0);
-        this.setNormal(t,v,0,0,1);
-        this.setColor(t,v,0,0,0);
-      }
+    for (var v=0; v<this.vnum; v++){
+      this.ndpositions.set(v,0,0);
+      this.ndpositions.set(v,1,0);
+      this.ndpositions.set(v,2,0);
+      this.ndnormals.set(v,0,0);
+      this.ndnormals.set(v,1,0);
+      this.ndnormals.set(v,2,0);
+      this.ndcolors.set(v,0,0);
+      this.ndcolors.set(v,1,0);
+      this.ndcolors.set(v,2,0);
     }
     this.geometry.attributes.position.needsUpdate = true;
     this.geometry.attributes.color.needsUpdate = true;
@@ -114,26 +106,52 @@ function Meander(tnum){
 
     var pw = this.pathWidth;
 
+    var ntri3 = ntri*3;
+
     var rgb = this.rgb;
 
-    this.setColor(ntri,0,rgb);
-    this.setColor(ntri,1,rgb);
-    this.setColor(ntri,2,rgb);
+    this.ndcolors.set(ntri3,0,rgb[0]);
+    this.ndcolors.set(ntri3,1,rgb[1]);
+    this.ndcolors.set(ntri3,2,rgb[2]);
+    this.ndcolors.set(ntri3+1,0,rgb[0]);
+    this.ndcolors.set(ntri3+1,1,rgb[1]);
+    this.ndcolors.set(ntri3+1,2,rgb[2]);
+    this.ndcolors.set(ntri3+2,0,rgb[0]);
+    this.ndcolors.set(ntri3+2,1,rgb[1]);
+    this.ndcolors.set(ntri3+2,2,rgb[2]);
 
-    var rnd = rand();
-    this.setNormal(ntri,0,rnd,pw,0);
-    this.setNormal(ntri,1,rnd+2,pw,0);
-    this.setNormal(ntri,2,rnd+1,pw,0);
+    rnd = ntri;
+    this.ndnormals.set(ntri3,0,rnd);
+    this.ndnormals.set(ntri3,1,rnd);
+    this.ndnormals.set(ntri3,2,rnd);
+    this.ndnormals.set(ntri3+1,0,rnd+1);
+    this.ndnormals.set(ntri3+1,1,rnd+1);
+    this.ndnormals.set(ntri3+1,2,rnd+1);
+    this.ndnormals.set(ntri3+2,0,rnd+2);
+    this.ndnormals.set(ntri3+2,1,rnd+2);
+    this.ndnormals.set(ntri3+2,2,rnd+2);
 
     if (cross<0){
-      this.setVertex(ntri,0,a.x,a.y,0);
-      this.setVertex(ntri,1,c.x,c.y,0);
-      this.setVertex(ntri,2,b.x,b.y,0);
+      this.ndpositions.set(ntri3,0,a.x);
+      this.ndpositions.set(ntri3,1,a.y);
+      this.ndpositions.set(ntri3,2,pw);
+      this.ndpositions.set(ntri3+1,0,c.x);
+      this.ndpositions.set(ntri3+1,1,c.y);
+      this.ndpositions.set(ntri3+1,2,pw);
+      this.ndpositions.set(ntri3+2,0,b.x);
+      this.ndpositions.set(ntri3+2,1,b.y);
+      this.ndpositions.set(ntri3+2,2,pw);
     }
     else{
-      this.setVertex(ntri,0,a.x,a.y,0);
-      this.setVertex(ntri,1,b.x,b.y,0);
-      this.setVertex(ntri,2,c.x,c.y,0);
+      this.ndpositions.set(ntri3,0,a.x);
+      this.ndpositions.set(ntri3,1,a.y);
+      this.ndpositions.set(ntri3,2,pw);
+      this.ndpositions.set(ntri3+1,0,b.x);
+      this.ndpositions.set(ntri3+1,1,b.y);
+      this.ndpositions.set(ntri3+1,2,pw);
+      this.ndpositions.set(ntri3+2,0,c.x);
+      this.ndpositions.set(ntri3+2,1,c.y);
+      this.ndpositions.set(ntri3+2,2,pw);
     }
 
     this.ntri = ntri+1;
@@ -161,7 +179,7 @@ function Meander(tnum){
       this.ntri = 0;
     }
 
-    var pathWidth = this.pathWidth*0.5;
+    var pathWidth = this.pathWidth;
 
     var step = this.vxy;
     var diff = new THREE.Vector3(step.y,-step.x);
@@ -185,13 +203,14 @@ function Meander(tnum){
     newpos.addVectors(this.xy,step);
     this.xy = newpos;
 
-    this.pathWidth += halfrand(stph);
-    if (this.pathWidth>200){
-      this.pathWidth = 200;
+    pathWidth += halfrand(stph);
+    if (pathWidth>100){
+      pathWidth = 100;
     }
-    if (this.pathWidth<-200){
-      this.pathWidth = -200;
+    if (pathWidth<-100){
+      pathWidth = -100;
     }
+    this.pathWidth = pathWidth;
     var ranAngle = rand()*pii;
     var ranx = cos(ranAngle);
     var rany = sin(ranAngle);
@@ -200,9 +219,8 @@ function Meander(tnum){
     this.vxy.add(da);
 
     if (mousedown){
-      var dx = (window.mouseX-x);
-      var dy = (window.mouseY-y);
-      //var dd = sqrt(dx*dx+dy*dy);
+      var dx = window.mouseX-x;
+      var dy = window.mouseY-y;
       var mouseStep = new THREE.Vector2(dx,dy);
       mouseStep.multiplyScalar(0.2);
       this.vxy.add(mouseStep);
@@ -229,6 +247,12 @@ $(document).ready(function(){
   var $container = $('#box');
   window.itt = 0;
 
+  //stats = new Stats();
+  //stats.domElement.style.position = 'absolute';
+  //stats.domElement.style.bottom = '0px';
+  //stats.domElement.style.left = '0px';
+  //stats.domElement.style.zIndex = 100;
+  //$container.append( stats.domElement );
 
   var vertexShader = $('#vertexShader').text();
   var fragmentShader = $('#fragmentShader').text();
@@ -287,21 +311,21 @@ $(document).ready(function(){
     windowAdjust();
   });
 
-  $(document).click(function(){
+  $('body').click(function(){
     mousedown = true;
     setTimeout(function(){
       mousedown = false;
     },500);
   });
 
-  $(document).on('mousedown touchstart touchmove',function (e){
+  $('body').on('mousedown touchstart touchmove',function (e){
     mousedown = true;
   });
-  $(document).on('mouseup mouseleave touchend touchcancel',function (e){
+  $('body').on('mouseup mouseleave touchend touchcancel',function (e){
     mousedown = false;
   });
 
-  $(document).on('touchmove mousemove touchstart',function(e) {
+  $('body').on('touchmove mousemove touchstart',function(e) {
     window.mouseX = winWidth*0.5-e.pageX+offset.left;
     window.mouseY = winHeight*0.5-e.pageY+offset.top;
   });
@@ -311,10 +335,10 @@ $(document).ready(function(){
   var tnum = 80;
   var mnum = 220;
 
-  var pathWidth = 70;
+  var pathWidth = 10;
   var stp = 1;
   var stpa = 0.4;
-  var stph = 3;
+  var stph = 10;
 
   function set(m){
     rgb = color[floor(rand()*color.length)];
@@ -340,6 +364,7 @@ $(document).ready(function(){
     window.itt += 1;
     requestAnimationFrame(animate);
     render();
+    //stats.update();
     for (var s=0;s<2;s++){
       for (var i=0;i<mnum;i++){
         MM[i].mstep(stp,stpa,stph);
